@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Sheet } from "@/components/ui/Sheet";
-import { ALL_SIZES, CATEGORIES, getCollection } from "@/lib/catalog";
+import { ALL_SIZES, CATEGORIES } from "@/lib/catalog";
+import { useCatalog } from "@/components/CatalogProvider";
 import { applyFilters, parseFilters, PRICE_RANGES, SORT_OPTIONS } from "@/lib/filters";
 import { cn } from "@/lib/format";
 import type { CategorySlug, Product } from "@/lib/types";
@@ -23,6 +24,7 @@ export function ProductListing({ products, lockedCategory }: Props) {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const { collections } = useCatalog();
   const filters = parseFilters(new URLSearchParams(params.toString()));
   const results = useMemo(() => applyFilters(products, filters), [products, filters]);
 
@@ -46,7 +48,7 @@ export function ProductListing({ products, lockedCategory }: Props) {
   const chips = [
     ...(filters.q ? [{ label: `“${filters.q}”`, onRemove: () => update("q", null) }] : []),
     ...(filters.collection
-      ? [{ label: getCollection(filters.collection)?.name ?? filters.collection, onRemove: () => update("colecao", null) }]
+      ? [{ label: collections.find((c) => c.slug === filters.collection)?.name ?? filters.collection, onRemove: () => update("colecao", null) }]
       : []),
     ...filters.categories.map((c) => ({
       label: CATEGORIES.find((x) => x.slug === c)?.name ?? c,

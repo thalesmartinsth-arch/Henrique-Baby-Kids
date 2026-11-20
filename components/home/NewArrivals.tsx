@@ -2,9 +2,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductCarousel } from "@/components/product/ProductCarousel";
 import { getNewArrivals } from "@/lib/catalog";
+import type { Product } from "@/lib/types";
 
-export function NewArrivals() {
-  const products = getNewArrivals();
+export function NewArrivals({ catalog }: { catalog: Product[] }) {
+  const products = getNewArrivals(catalog);
   return (
     <section className="overflow-hidden py-20 lg:py-28" aria-labelledby="new-title">
       <div className="wrap">

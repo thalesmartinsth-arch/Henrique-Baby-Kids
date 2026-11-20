@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getFeatured } from "@/lib/catalog";
+import { useCatalog } from "@/components/CatalogProvider";
 import { cn } from "@/lib/format";
 
 const TABS = [
@@ -16,7 +17,8 @@ const TABS = [
 
 export function Featured() {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("todos");
-  const all = getFeatured();
+  const { products: catalog } = useCatalog();
+  const all = getFeatured(catalog);
   const products = (tab === "todos" ? all : all.filter((p) => p.categories.includes(tab))).slice(0, 8);
 
   return (

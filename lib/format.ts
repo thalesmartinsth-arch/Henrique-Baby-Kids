@@ -18,3 +18,7 @@ export function discountPercent(price: number, compareAt?: number) {
 
 export const cn = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(" ");
+
+/** Data ISO de `days` dias atrás (usado nos relatórios do painel). */
+export const daysAgo = (days: number) => new Date(Date.now() - days * 86400000);
+export const nowMs = () => Date.now();

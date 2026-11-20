@@ -2,8 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { getProductById } from "@/lib/catalog";
-import { findCoupon } from "@/lib/pricing";
+import type { AppliedCoupon } from "@/lib/pricing";
 import type { CartItem } from "@/lib/types";
 
 const MAX_QTY = 10;
@@ -11,15 +10,14 @@ const MAX_QTY = 10;
 type ShopState = {
   cart: CartItem[];
   favorites: string[];
-  coupon: string | null;
+  coupon: AppliedCoupon | null;
   cep: string;
-  addToCart: (productId: string, size: string, quantity?: number) => void;
+  addToCart: (productId: string, size: string, quantity?: number, max?: number) => void;
   setQuantity: (productId: string, size: string, quantity: number) => void;
   removeFromCart: (productId: string, size: string) => void;
   clearCart: () => void;
   toggleFavorite: (productId: string) => boolean;
-  applyCoupon: (code: string) => boolean;
-  removeCoupon: () => void;
+  setCoupon: (coupon: AppliedCoupon | null) => void;
   setCep: (cep: string) => void;
 };
 
@@ -32,17 +30,16 @@ export const useShop = create<ShopState>()(
       coupon: null,
       cep: "",
 
-      addToCart: (productId, size, quantity = 1) =>
+      addToCart: (productId, size, quantity = 1, max = MAX_QTY) =>
         set((s) => {
+          const limit = Math.min(MAX_QTY, max);
           const existing = s.cart.find((i) => i.productId === productId && i.size === size);
           if (existing) {
             return {
-              cart: s.cart.map((i) =>
-                i === existing ? { ...i, quantity: Math.min(MAX_QTY, i.quantity + quantity) } : i,
-              ),
+              cart: s.cart.map((i) => (i === existing ? { ...i, quantity: Math.min(limit, i.quantity + quantity) } : i)),
             };
           }
-          return { cart: [{ productId, size, quantity: Math.min(MAX_QTY, quantity) }, ...s.cart] };
+          return { cart: [{ productId, size, quantity: Math.min(limit, quantity) }, ...s.cart] };
         }),
 
       setQuantity: (productId, size, quantity) =>
@@ -51,9 +48,7 @@ export const useShop = create<ShopState>()(
             quantity <= 0
               ? s.cart.filter((i) => !(i.productId === productId && i.size === size))
               : s.cart.map((i) =>
-                  i.productId === productId && i.size === size
-                    ? { ...i, quantity: Math.min(MAX_QTY, quantity) }
-                    : i,
+                  i.productId === productId && i.size === size ? { ...i, quantity: Math.min(MAX_QTY, quantity) } : i,
                 ),
         })),
 
@@ -70,29 +65,15 @@ export const useShop = create<ShopState>()(
         return !isFav;
       },
 
-      applyCoupon: (code) => {
-        const coupon = findCoupon(code);
-        if (!coupon) return false;
-        set({ coupon: coupon.code });
-        return true;
-      },
-      removeCoupon: () => set({ coupon: null }),
+      setCoupon: (coupon) => set({ coupon }),
       setCep: (cep) => set({ cep }),
     }),
     {
       name: "hbk-shop",
-      version: 1,
+      // v2: ids passaram a ser UUIDs do banco — itens antigos são descartados.
+      version: 2,
       storage: createJSONStorage(() => localStorage),
-      // Descarta itens de produtos que saíram do catálogo.
-      merge: (persisted, current) => {
-        const p = (persisted ?? {}) as Partial<ShopState>;
-        return {
-          ...current,
-          ...p,
-          cart: (p.cart ?? []).filter((i) => getProductById(i.productId)?.sizes.includes(i.size)),
-          favorites: (p.favorites ?? []).filter((id) => getProductById(id)),
-        };
-      },
+      migrate: () => ({ cart: [], favorites: [], coupon: null, cep: "" }),
     },
   ),
 );

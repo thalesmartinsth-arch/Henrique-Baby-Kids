@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/format";
+import { subscribeNewsletter } from "@/app/(store)/actions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -19,8 +20,12 @@ export function Newsletter() {
     if (!consent) return setError("Marque a autorização para receber nossos e-mails.");
     setError("");
     setStatus("loading");
-    // Integração futura: POST para a plataforma de e-mail marketing.
-    await new Promise((r) => setTimeout(r, 900));
+    const res = await subscribeNewsletter(email);
+    if (!res.ok) {
+      setError(res.error);
+      setStatus("idle");
+      return;
+    }
     setStatus("done");
   };
 
@@ -49,7 +54,7 @@ export function Newsletter() {
                 </span>
                 <p className="mt-5 font-serif text-3xl">Que bom ter você aqui!</p>
                 <p className="mt-2 text-sm text-navy-soft">
-                  Enviamos uma confirmação para <strong>{email}</strong>. Use o cupom <strong>BEMVINDO10</strong> na primeira compra.
+                  <strong>{email}</strong> está na nossa lista. Use o cupom <strong>BEMVINDO10</strong> na primeira compra.
                 </p>
               </motion.div>
             ) : (

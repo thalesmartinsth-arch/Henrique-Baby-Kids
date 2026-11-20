@@ -1,10 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { MobileMenu } from "@/components/layout/MobileMenu";
-import { SearchOverlay } from "@/components/layout/SearchOverlay";
-import { MiniCart } from "@/components/cart/MiniCart";
 import { Toaster } from "@/components/ui/Toaster";
 import { SITE } from "@/lib/site";
 import "./globals.css";
@@ -45,18 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR" className={`${cormorant.variable} ${manrope.variable}`}>
       <body className="min-h-dvh antialiased">
-        <a
-          href="#conteudo"
-          className="sr-only z-[100] rounded-[3px] bg-navy px-4 py-3 text-sm text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
-        >
-          Pular para o conteúdo
-        </a>
-        <Header />
-        <main id="conteudo">{children}</main>
-        <Footer />
-        <MobileMenu />
-        <SearchOverlay />
-        <MiniCart />
+        {children}
         <Toaster />
       </body>
     </html>

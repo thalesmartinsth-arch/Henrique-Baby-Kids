@@ -9,7 +9,6 @@ export type CategorySlug =
   | "vestidos"
   | "acessorios";
 
-export type CollectionSlug = "jardim-de-verao" | "pequenos-classicos" | "primeiros-dias";
 
 export type ProductImage = {
   /** URL base da imagem (sem largura — o loader define). */
@@ -27,13 +26,16 @@ export type Product = {
   price: number;
   compareAtPrice?: number;
   categories: CategorySlug[];
-  collection: CollectionSlug;
+  collection: string | null;
   sizes: string[];
   /** Tamanhos sem estoque — aparecem riscados. */
   soldOut?: string[];
+  /** Peças disponíveis por tamanho. */
+  stock: Record<string, number>;
   color: string;
   images: ProductImage[];
   isNew?: boolean;
+  featured?: boolean;
   /** Data de lançamento (ISO) — usada na ordenação por novidades. */
   releasedAt: string;
 };
@@ -46,10 +48,10 @@ export type Category = {
 };
 
 export type Collection = {
-  slug: CollectionSlug;
+  slug: string;
   name: string;
   description: string;
-  image: string;
+  image: string | null;
 };
 
 export type CartItem = {

@@ -9,7 +9,8 @@ import { Price } from "@/components/ui/Price";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { SizePicker } from "@/components/ui/SizePicker";
 import { SizeGuide } from "./SizeGuide";
-import { FREE_SHIPPING_THRESHOLD, BABY_SIZES, getCollection } from "@/lib/catalog";
+import { FREE_SHIPPING_THRESHOLD, BABY_SIZES } from "@/lib/catalog";
+import { useCatalog } from "@/components/CatalogProvider";
 import { cn, formatPrice } from "@/lib/format";
 import { useAddToCart } from "@/lib/hooks";
 import { formatCep, quoteShipping } from "@/lib/pricing";
@@ -73,7 +74,8 @@ export function ProductDetails({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [error, setError] = useState(false);
   const [added, setAdded] = useState(false);
-  const collection = getCollection(product.collection);
+  const { collections } = useCatalog();
+  const collection = collections.find((c) => c.slug === product.collection);
   const isBaby = product.sizes.every((s) => BABY_SIZES.includes(s));
 
   const guard = () => {
@@ -110,16 +112,20 @@ export function ProductDetails({ product }: { product: Product }) {
           value={size}
           onChange={(s) => {
             setSize(s);
+            setQty((q) => Math.max(1, Math.min(q, product.stock[s] ?? 1)));
             setError(false);
           }}
           invalid={error}
         />
         {error && <p className="mt-3 text-[13px] text-rose-deep" role="alert">Escolha um tamanho para continuar.</p>}
         {!!product.soldOut?.length && <p className="mt-3 text-[12px] text-navy-soft">Tamanho riscado: esgotado no momento.</p>}
+        {size && (product.stock[size] ?? 0) > 0 && (product.stock[size] ?? 0) <= 3 && (
+          <p className="mt-2 text-[12px] font-semibold text-rose-deep">Últimas {product.stock[size]} peças neste tamanho</p>
+        )}
       </div>
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
-        <QuantityStepper value={qty} onChange={setQty} />
+        <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, Math.min(10, size ? product.stock[size] ?? 0 : 10))} />
         <span className="text-[12px] text-navy-soft">Cor: {product.color}</span>
       </div>
 

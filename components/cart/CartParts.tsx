@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { Tag, Trash2, Truck, X } from "lucide-react";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
@@ -10,12 +10,15 @@ import { FREE_SHIPPING_THRESHOLD } from "@/lib/catalog";
 import { cn, formatPrice, installments } from "@/lib/format";
 import { cartTotals, formatCep, quoteShipping, resolveCart, type CartLine } from "@/lib/pricing";
 import { useShop } from "@/store/shop";
+import { useCatalog } from "@/components/CatalogProvider";
+import { validateCoupon } from "@/app/(store)/actions";
 
 export function useCart() {
+  const { byId } = useCatalog();
   const items = useShop((s) => s.cart);
   const coupon = useShop((s) => s.coupon);
   const cep = useShop((s) => s.cep);
-  const lines = resolveCart(items);
+  const lines = resolveCart(items, byId);
   const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
   const shipping = quoteShipping(cep, subtotal);
   const totals = cartTotals(lines, coupon, shipping);
@@ -53,6 +56,11 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
               Tam. {line.size} · {product.color}
             </p>
             <p className="mt-1 text-[12px] text-navy-soft">{formatPrice(product.price)} cada</p>
+            {line.quantity > line.available && (
+              <p className="mt-1 text-[12px] font-semibold text-rose-deep">
+                {line.available ? `Só ${line.available} em estoque` : "Esgotado — remova para continuar"}
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -68,6 +76,7 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
             size="sm"
             value={line.quantity}
             min={0}
+            max={Math.min(10, line.available)}
             onChange={(q) => setQuantity(line.productId, line.size, q)}
           />
           <motion.span key={line.lineTotal} initial={{ opacity: 0.4, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-[15px] font-semibold tabular-nums">
@@ -109,18 +118,19 @@ export function FreeShippingBar({ remaining }: { remaining: number }) {
 
 export function CouponField() {
   const coupon = useShop((s) => s.coupon);
-  const apply = useShop((s) => s.applyCoupon);
-  const removeCoupon = useShop((s) => s.removeCoupon);
+  const setCoupon = useShop((s) => s.setCoupon);
+  const { totals } = useCart();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
 
   if (coupon) {
     return (
       <div className="flex items-center justify-between rounded-[3px] border border-dashed border-rose bg-blush/60 px-4 py-3 text-[13px]">
         <span className="flex items-center gap-2 font-semibold">
-          <Tag className="size-4 text-rose-deep" /> {coupon} aplicado
+          <Tag className="size-4 text-rose-deep" /> {coupon.code} · {coupon.percent}% aplicado
         </span>
-        <button type="button" onClick={removeCoupon} aria-label="Remover cupom" className="grid size-8 place-items-center rounded-full hover:bg-white">
+        <button type="button" onClick={() => setCoupon(null)} aria-label="Remover cupom" className="grid size-8 place-items-center rounded-full hover:bg-white">
           <X className="size-4" />
         </button>
       </div>
@@ -132,10 +142,14 @@ export function CouponField() {
       onSubmit={(e) => {
         e.preventDefault();
         if (!code.trim()) return setError("Digite um cupom.");
-        if (apply(code)) {
-          setError("");
-          setCode("");
-        } else setError("Cupom inválido. Experimente BEMVINDO10.");
+        startTransition(async () => {
+          const res = await validateCoupon(code, totals.subtotal);
+          if (res.ok) {
+            setCoupon(res.coupon);
+            setError("");
+            setCode("");
+          } else setError(res.error);
+        });
       }}
       noValidate
     >
@@ -152,8 +166,8 @@ export function CouponField() {
           aria-describedby={error ? "coupon-error" : undefined}
           className={cn("field h-11 uppercase", error && "border-rose-deep")}
         />
-        <button type="submit" className="btn btn-outline h-11 min-h-11 px-5">
-          Aplicar
+        <button type="submit" disabled={pending} className="btn btn-outline h-11 min-h-11 px-5">
+          {pending ? "…" : "Aplicar"}
         </button>
       </div>
       {error && (

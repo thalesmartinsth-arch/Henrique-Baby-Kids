@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { CATEGORIES, PRODUCTS } from "@/lib/catalog";
+import { CATEGORIES } from "@/lib/catalog";
+import type { Product } from "@/lib/types";
 import { cn } from "@/lib/format";
 
 // Grade editorial: os dois primeiros cards ocupam mais espaço no desktop.
@@ -15,7 +16,7 @@ const LAYOUT = [
   "lg:col-span-6",
 ];
 
-export function Categories() {
+export function Categories({ products }: { products: Product[] }) {
   return (
     <section className="py-20 lg:py-28">
       <div className="wrap">
@@ -31,7 +32,7 @@ export function Categories() {
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:auto-rows-[260px] lg:grid-cols-12 lg:gap-5">
           {CATEGORIES.map((c, i) => {
-            const count = PRODUCTS.filter((p) => p.categories.includes(c.slug)).length;
+            const count = products.filter((p) => p.categories.includes(c.slug)).length;
             return (
               <Link
                 key={c.slug}

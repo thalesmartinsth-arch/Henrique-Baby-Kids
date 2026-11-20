@@ -1,21 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { getProductById } from "./catalog";
+import { useCatalog } from "@/components/CatalogProvider";
 import { useShop } from "@/store/shop";
 import { useUI } from "@/store/ui";
 
 /** Adiciona ao carrinho com feedback visual (toast + pulso na sacola). */
 export function useAddToCart() {
+  const { byId } = useCatalog();
   const add = useShop((s) => s.addToCart);
   const notify = useUI((s) => s.notify);
   const pulse = useUI((s) => s.pulseBag);
   const setCartOpen = useUI((s) => s.setCartOpen);
 
   return (productId: string, size: string, quantity = 1, opts: { openCart?: boolean } = {}) => {
-    const product = getProductById(productId);
+    const product = byId(productId);
     if (!product) return;
-    add(productId, size, quantity);
+    add(productId, size, quantity, product.stock[size] ?? 0);
     pulse();
     if (opts.openCart) {
       setCartOpen(true);
@@ -30,10 +31,11 @@ export function useAddToCart() {
 }
 
 export function useToggleFavorite() {
+  const { byId } = useCatalog();
   const toggle = useShop((s) => s.toggleFavorite);
   const notify = useUI((s) => s.notify);
   return (productId: string) => {
-    const product = getProductById(productId);
+    const product = byId(productId);
     const added = toggle(productId);
     notify({
       title: added ? "Salvo nos favoritos" : "Removido dos favoritos",

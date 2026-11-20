@@ -7,6 +7,7 @@ import { useDeferredValue, useState } from "react";
 import { Search } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { searchProducts } from "@/lib/catalog";
+import { useCatalog } from "@/components/CatalogProvider";
 import { formatPrice } from "@/lib/format";
 import { useUI } from "@/store/ui";
 
@@ -16,9 +17,11 @@ export function SearchOverlay() {
   const open = useUI((s) => s.searchOpen);
   const setOpen = useUI((s) => s.setSearchOpen);
   const router = useRouter();
+  const { products } = useCatalog();
   const [query, setQuery] = useState("");
   const deferred = useDeferredValue(query);
-  const results = searchProducts(deferred).slice(0, 6);
+  const allResults = searchProducts(products, deferred);
+  const results = allResults.slice(0, 6);
 
   const close = () => setOpen(false);
   const submit = (q: string) => {
@@ -72,7 +75,7 @@ export function SearchOverlay() {
             </div>
           ) : results.length ? (
             <>
-              <p className="eyebrow mb-4">{searchProducts(deferred).length} resultado(s)</p>
+              <p className="eyebrow mb-4">{allResults.length} resultado(s)</p>
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {results.map((p) => (
                   <li key={p.id}>
