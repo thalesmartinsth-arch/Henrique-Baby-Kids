@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/*
+ * Henrique Baby & Kids — tokens da marca
+ * Azul e rosa são protagonistas, mas usados em superfícies e detalhes;
+ * texto sempre em azul-marinho para manter contraste.
+ */
+@theme {
+  --color-sky: #769cc5;
+  --color-sky-deep: #5b82ad;
+  --color-sky-soft: #e4edf6;
+  --color-rose: #e9a9bc;
+  --color-rose-deep: #c97f96;
+  --color-blush: #f8e9ef;
+  --color-navy: #263b55;
+  --color-navy-soft: #4a5d75;
+  --color-ivory: #faf8f6;
+  --color-mist: #eaecef;
+  --color-line: #e3e1de;
+
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-manrope), "Manrope", system-ui, sans-serif;
+
+  --radius-card: 6px;
+  --radius-btn: 4px;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-shake: shake 0.4s var(--ease-soft);
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+:root {
+  --header-h: 7.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-navy);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-blush);
+  color: var(--color-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-sky-deep);
+  outline-offset: 3px;
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-deep;
+  }
+
+  .display {
+    @apply font-serif font-medium leading-[1.02] tracking-[-0.01em];
+  }
+
+  .btn {
+    @apply relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-[var(--radius-btn)] px-7 text-[12px] font-semibold uppercase tracking-[0.18em] transition-all duration-300 ease-[var(--ease-soft)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-navy text-white hover:-translate-y-px hover:bg-[#1c2d42] hover:shadow-[0_10px_30px_-12px_rgba(38,59,85,0.6)];
+  }
+  .btn-rose {
+    @apply bg-rose text-navy hover:-translate-y-px hover:bg-[#e39bb0] hover:shadow-[0_10px_30px_-12px_rgba(201,127,150,0.7)];
+  }
+  .btn-light {
+    @apply bg-white text-navy hover:-translate-y-px hover:bg-blush;
+  }
+  .btn-outline {
+    @apply border border-navy/25 text-navy hover:border-navy hover:bg-navy hover:text-white;
+  }
+  .btn-ghost-light {
+    @apply border border-white/60 text-white backdrop-blur-sm hover:border-white hover:bg-white hover:text-navy;
+  }
+
+  .link-underline {
+    @apply relative inline-block after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-current after:transition-transform after:duration-500 after:ease-[var(--ease-soft)] hover:after:origin-left hover:after:scale-x-100;
+  }
+
+  .field {
+    @apply h-12 w-full rounded-[var(--radius-btn)] border border-line bg-white px-4 text-sm text-navy placeholder:text-navy/40 transition-colors outline-none focus:border-sky-deep;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
